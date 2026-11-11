@@ -7,11 +7,11 @@ CREATE TABLE IF NOT EXISTS Users (
 );
 
 CREATE TABLE lists (
-    id UUID PRIMARY KET DEFAULT gen_random_uuid(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     title VARCHAR(100) NOT NULL,
     icon VARCHAR(50),
     color VARCHAR(50) NOT NULL,
-    viewType VARCHAR(20) NOT NULL DEFAULT "all",
+    viewType VARCHAR(20) NOT NULL DEFAULT 'all',
     userId UUID NOT NULL REFERENCES Users(id) ON DELETE CASCADE,
     CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

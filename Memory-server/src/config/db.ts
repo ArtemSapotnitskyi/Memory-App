@@ -14,7 +14,9 @@ console.log(
 
 export const pool = new Pool({
   connectionString: process.env.DATABASE_URL_DEV,
-  ssl: { rejectUnauthorized: false },
+
+  //SSL CERTIFICATES
+  // ssl: { rejectUnauthorized: false },
 });
 
 pool.query("SELECT NOW()", (err, res) => {
