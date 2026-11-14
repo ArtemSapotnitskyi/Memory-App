@@ -1,21 +1,26 @@
 import express from "express";
-import dotnev from "dotenv";
+import dotenv from "dotenv";
 import "./config/db.js";
 
 import userRoutes from "./routers/user.route.js";
+import listRoutes from "./routers/list.route.js";
+import itemRouter from "./routers/item.route.js";
+
+dotenv.config();
 
 if (!process.env.JWT_SECRET) {
   console.error("FATAL ERROR: JWT keys are not defined in the .env file");
   process.exit(1);
 }
 
-dotnev.config();
-
 const app = express();
 const PORT = process.env.PORT || 5004;
 
-app.use(express.json);
+app.use(express.json());
+
 app.use("/api/users", userRoutes);
+app.use("/api/lists", listRoutes);
+app.use("/api/items", itemRouter);
 
 app.get("/", (req, res) => {
   res.send("Memory Backend is running on TypeScript!");
