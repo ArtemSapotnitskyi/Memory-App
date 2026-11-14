@@ -12,6 +12,14 @@ export interface UpdateUserInput {
   password?: string;
 }
 
+export const getById = async (id: string) => {
+  const result = await pool.query(
+    "SELECT id, username, email, createdat FROM users WHERE id = $1",
+    [id],
+  );
+  return result.rows[0];
+};
+
 export const findByEmail = async (email: string) => {
   const result = await pool.query("SELECT * FROM users WHERE email = $1", [
     email,
