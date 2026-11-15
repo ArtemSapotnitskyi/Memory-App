@@ -2,7 +2,11 @@
 import { useState } from "react";
 import { Plus } from "lucide-react";
 
-export default function BottomNav() {
+interface BottomNavProps {
+  onAddClick: () => void;
+}
+
+export default function BottomNav({ onAddClick }: BottomNavProps) {
   const [filter, setFilter] = useState<"Today" | "All">("Today");
 
   return (
@@ -37,7 +41,10 @@ export default function BottomNav() {
           All
         </button>
       </div>
-      <button className="w-30 h-16 flex items-center justify-center rounded-full bg-[#0f0f11] dark:bg-white text-white dark:text-black active:scale-95 transition-all">
+      <button
+        onClick={onAddClick}
+        className="w-30 h-16 flex items-center justify-center rounded-full bg-[#0f0f11] dark:bg-white text-white dark:text-black active:scale-95 transition-all"
+      >
         <Plus size={28} strokeWidth={3} />
       </button>
     </div>
