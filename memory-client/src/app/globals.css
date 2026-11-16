@@ -1,42 +1,103 @@
 @import "tailwindcss";
-@variant dark (&:where(.dark, .dark *));
+@custom-variant dark (&:where(.dark, .dark *));
 
 @layer base {
   :root {
-    --background: #ffffff;
-    --foreground: #000000;
-    --liquid-bg: #e5e5e5;
+    --theme-bg: #f3f4f6;
+    --theme-element: #e5e5e5;
+    --theme-accent: #000000;
   }
-
   .dark {
-    --background: #0f0f11;
-    --foreground: #ffffff;
-    --liquid-bg: #4a4a4c;
+    --theme-bg: #1a1a1e;
+    --theme-element: #2c2c2e;
+    --theme-accent: #ffffff;
   }
 
-  body {
-    background-color: var(--background);
-    color: var(--foreground);
-    transition:
-      background-color 0.3s ease,
-      color 0.3s ease;
+  :root[data-theme="rose"] {
+    --theme-bg: #ff9090;
+    --theme-element: #ff5f5f;
+    --theme-accent: #8f0000;
+  }
+  .dark[data-theme="rose"] {
+    --theme-bg: #942727;
+    --theme-element: #8f0000;
+    --theme-accent: #ff5f5f;
+  }
+
+  :root[data-theme="blue"] {
+    --theme-bg: #93c5fd;
+    --theme-element: #60a5fa;
+    --theme-accent: #1e3a8a;
+  }
+  .dark[data-theme="blue"] {
+    --theme-bg: #1e3a8a;
+    --theme-element: #1e40af;
+    --theme-accent: #60a5fa;
+  }
+
+  /* ФІОЛЕТОВА ТЕМА */
+  :root[data-theme="purple"] {
+    --theme-bg: #d8b4fe;
+    --theme-element: #c084fc;
+    --theme-accent: #581c87;
+  }
+  .dark[data-theme="purple"] {
+    --theme-bg: #4c1d95;
+    --theme-element: #5b21b6;
+    --theme-accent: #c084fc;
+  }
+  :root[data-theme="green"] {
+    --theme-bg: #86efac;
+    --theme-element: #4ade80;
+    --theme-accent: #14532d;
+  }
+  .dark[data-theme="green"] {
+    --theme-bg: #14532d;
+    --theme-element: #166534;
+    --theme-accent: #4ade80;
   }
 }
 
 @layer utilities {
+  .bg-theme-main {
+    background-color: var(--theme-bg);
+    transition: background-color 0.4s ease;
+  }
+
+  .text-theme-accent {
+    color: var(--theme-accent);
+    transition: color 0.4s ease;
+  }
+
+  .bg-theme-accent {
+    background-color: var(--theme-accent);
+    color: var(--theme-bg);
+    transition:
+      background-color 0.4s ease,
+      color 0.4s ease;
+  }
+
+  .bg-theme-container {
+    background-color: var(--theme-accent);
+    transition: background-color 0.4s ease;
+  }
+
   .liquid-glass {
-    background-color: var(--liquid-bg);
+    background-color: var(--theme-element);
     box-shadow:
-      inset 2px 2px 4px rgba(255, 255, 255, 0.8),
+      inset 2px 2px 4px rgba(255, 255, 255, 0.3),
       inset -2px -2px 5px rgba(0, 0, 0, 0.1);
-    border: 4px solid transparent;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition:
+      background-color 0.4s ease,
+      box-shadow 0.4s ease;
   }
 
   .dark .liquid-glass {
-    background-color: var(--liquid-bg);
+    background-color: var(--theme-element);
     box-shadow:
-      inset 1.5px 1.5px 2px rgba(255, 255, 255, 0.35),
-      inset -2px -2px 4px rgba(0, 0, 0, 0.4);
-    border: 4px solid #2c2c2e;
+      inset 1.5px 1.5px 2px rgba(255, 255, 255, 0.15),
+      inset -2px -2px 4px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.05);
   }
 }
