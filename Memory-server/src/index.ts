@@ -19,7 +19,7 @@ const PORT = process.env.PORT || 5004;
 
 const allowedOrigins = [
   "http://localhost:3000",
-  "https://memory-client-pcgb162zu-comming2.vercel.app",
+  "https://memory-client-azure.vercel.app",
 ];
 
 app.use(
