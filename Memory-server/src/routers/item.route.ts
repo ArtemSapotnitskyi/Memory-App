@@ -10,7 +10,7 @@ import {
 const router = Router();
 
 router.use(requireAuth);
-router.get("/list/:listId", itemController.getAll);
+
 router.post("/", validate(createItemSchema), itemController.create);
 router.patch("/:id", validate(updateItemSchema), itemController.update);
 router.delete("/:id", itemController.remove);

@@ -6,8 +6,8 @@ export const createListSchema = z.object({
   color: z
     .string()
     .regex(/^#[0-9A-Fa-f]{6}$/, "Invalid color format. Must be HEX."),
-  viewType: z.enum(["list", "grid"], {
-    message: "View type must be either 'list' or 'grid'",
+  viewType: z.enum(["Today", "All"], {
+    message: "View type must be either 'Today' or 'All'",
   }),
 });
 

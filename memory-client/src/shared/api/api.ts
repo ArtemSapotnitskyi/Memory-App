@@ -1,28 +1,32 @@
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 
-export const api = axios.create({
-  baseURL: "http://localhost:5004/api", // Заміни на порт свого бекенду, якщо інший
+export const NEXT_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5004/api";
+
+export const apiClient = axios.create({
+  baseURL: NEXT_BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-api.interceptors.request.use((config) => {
+//Add a token to each request
+apiClient.interceptors.request.use((config) => {
   if (typeof window !== "undefined") {
     const token = localStorage.getItem("token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
   }
+
   return config;
 });
 
-api.interceptors.response.use(
+apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401 && typeof window !== "undefined") {
+    if (error.response?.status === 401) {
       localStorage.removeItem("token");
-      window.location.href = "/auth";
     }
     return Promise.reject(error);
   },

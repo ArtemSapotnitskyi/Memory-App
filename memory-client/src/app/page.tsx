@@ -1,5 +1,7 @@
 "use client";
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   Home as HomeIcon,
   Briefcase,
@@ -14,103 +16,137 @@ import ListModal from "@/components/ListModal";
 import Card, { CardItem } from "@/components/Card";
 import type { TaskItem } from "@/components/ListModal";
 
+import { useAuthStore } from "@/shared/store/auth.store";
+import { listService } from "@/shared/api/services/listService";
+import { itemService } from "@/shared/api/services/itemService";
+
+const getIconComponent = (iconName: string) => {
+  switch (iconName) {
+    case "Home":
+      return <HomeIcon size={22} />;
+    case "Briefcase":
+      return <Briefcase size={22} />;
+    case "Plane":
+      return <Plane size={22} />;
+    case "Car":
+      return <Car size={22} />;
+    case "ShoppingCart":
+      return <ShoppingCart size={22} />;
+    default:
+      return <LayoutList size={22} />;
+  }
+};
+
 export default function Home() {
+  const router = useRouter();
+  const { user, isInitialized } = useAuthStore();
+
+  const [cards, setCards] = useState<CardItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState<"Today" | "All">("Today");
-
   const [expandedCardId, setExpandedCardId] = useState<string | null>(null);
   const [editingCard, setEditingCard] = useState<CardItem | null>(null);
 
-  const [cards, setCards] = useState<CardItem[]>([
-    {
-      id: "1",
-      title: "Home Work",
-      icon: <HomeIcon size={22} />,
-      iconName: "Home",
-      color: "#ef4444",
-      date: "All",
-      tasks: [],
-    },
-    {
-      id: "2",
-      title: "Work",
-      icon: <Briefcase size={22} />,
-      iconName: "Briefcase",
-      color: "#f59e0b",
-      date: "All",
-      tasks: [],
-    },
-    {
-      id: "3",
-      title: "Airport",
-      icon: <Plane size={22} />,
-      iconName: "Plane",
-      color: "#a3e635",
-      date: "Today",
-      tasks: [],
-    },
-    {
-      id: "4",
-      title: "Car",
-      icon: <Car size={22} />,
-      iconName: "Car",
-      color: "#16a34a",
-      date: "Today",
-      tasks: [],
-    },
-    {
-      id: "5",
-      title: "Shop List",
-      icon: <ShoppingCart size={22} />,
-      iconName: "ShoppingCart",
-      color: "#1d4ed8",
-      date: "Today",
-      tasks: [
-        { id: "t1", text: "Apples (2-3)", completed: true },
-        { id: "t2", text: "Onions (2 kg)", completed: true },
-        { id: "t3", text: "Tomatos (3)", completed: false },
-      ],
-    },
-  ]);
-
-  const toggleTask = (cardId: string, taskId: string) => {
-    setCards((prevCards) =>
-      prevCards.map((card) => {
-        if (card.id === cardId) {
-          return {
-            ...card,
-            tasks: card.tasks.map((task) =>
-              task.id === taskId
-                ? { ...task, completed: !task.completed }
-                : task,
-            ),
-          };
-        }
-        return card;
-      }),
-    );
-  };
-
-  const toggleCardDate = (cardId: string) => {
-    setCards((prevCards) =>
-      prevCards.map((card) => {
-        if (card.id === cardId) {
-          return {
-            ...card,
-            date: card.date === "Today" ? "All" : "Today",
-          };
-        }
-        return card;
-      }),
-    );
-    setExpandedCardId(null);
-  };
-
-  const deleteCard = (cardId: string) => {
-    if (expandedCardId === cardId) {
-      setExpandedCardId(null);
+  useEffect(() => {
+    if (isInitialized && !user) {
+      router.push("/auth");
     }
-    setCards((prevCards) => prevCards.filter((card) => card.id !== cardId));
+  }, [user, isInitialized, router]);
+
+  const fetchData = async () => {
+    try {
+      setIsLoading(true);
+      const fetchedLists = await listService.getAll();
+
+      const cardsPromises = fetchedLists.map(async (list) => {
+        const fetchedItems = await itemService.getAllByListId(list.id);
+
+        const tasks: TaskItem[] = fetchedItems.map((item) => ({
+          id: item.id,
+          text: item.content,
+          completed: item.iscompleted,
+        }));
+
+        return {
+          id: list.id,
+          title: list.title,
+          icon: getIconComponent(list.icon),
+          iconName: list.icon,
+          color: list.color,
+          date: list.viewtype as "Today" | "All",
+          tasks: tasks,
+        } as CardItem;
+      });
+
+      const fullCards = await Promise.all(cardsPromises);
+      setCards(fullCards);
+    } catch (error) {
+      console.error("Помилка завантаження даних:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      fetchData();
+    }
+  }, [user]);
+
+  const toggleTask = async (cardId: string, taskId: string) => {
+    const card = cards.find((c) => c.id === cardId);
+    const task = card?.tasks.find((t) => t.id === taskId);
+    if (!task) return;
+
+    setCards((prev) =>
+      prev.map((c) =>
+        c.id === cardId
+          ? {
+              ...c,
+              tasks: c.tasks.map((t) =>
+                t.id === taskId ? { ...t, completed: !t.completed } : t,
+              ),
+            }
+          : c,
+      ),
+    );
+
+    try {
+      await itemService.update(taskId, { isCompleted: !task.completed });
+    } catch (error) {
+      console.error(error);
+      fetchData();
+    }
+  };
+
+  const toggleCardDate = async (cardId: string) => {
+    const card = cards.find((c) => c.id === cardId);
+    if (!card) return;
+    const newDate = card.date === "Today" ? "All" : "Today";
+
+    setExpandedCardId(null);
+    setCards((prev) =>
+      prev.map((c) => (c.id === cardId ? { ...c, date: newDate } : c)),
+    );
+
+    try {
+      await listService.update(cardId, { viewType: newDate });
+    } catch (error) {
+      fetchData();
+    }
+  };
+
+  const deleteCard = async (cardId: string) => {
+    setExpandedCardId(null);
+    setCards((prev) => prev.filter((c) => c.id !== cardId));
+
+    try {
+      await listService.remove(cardId);
+    } catch (error) {
+      fetchData();
+    }
   };
 
   const editCard = (cardId: string) => {
@@ -120,56 +156,87 @@ export default function Home() {
     }
   };
 
-  const handleSaveModal = (
+  const handleSaveModal = async (
     cardName: string,
     items: TaskItem[],
     color: string,
     iconName: string,
   ) => {
-    const { availableIcons } = require("@/components/ListModal");
-    const selectedIconNode = availableIcons[iconName];
+    try {
+      if (editingCard) {
+        await listService.update(editingCard.id, {
+          title: cardName,
+          color: color,
+          icon: iconName,
+        });
 
-    if (editingCard) {
-      setCards((prevCards) =>
-        prevCards.map((card) =>
-          card.id === editingCard.id
-            ? {
-                ...card,
-                title: cardName,
-                tasks: items,
-                color: color,
-                icon: selectedIconNode,
-                iconName: iconName,
-              }
-            : card,
-        ),
-      );
-      setEditingCard(null);
-    } else {
-      const newCard: CardItem = {
-        id: Date.now().toString(),
-        title: cardName,
-        icon: selectedIconNode,
-        iconName: iconName,
-        color: color,
-        date: activeFilter,
-        tasks: items,
-      };
+        const oldTasks = editingCard.tasks;
 
-      setCards((prevCards) => [...prevCards, newCard]);
+        for (const item of items) {
+          const isOld = oldTasks.find((t) => t.id === item.id);
+          if (isOld) {
+            if (
+              isOld.text !== item.text ||
+              isOld.completed !== item.completed
+            ) {
+              await itemService.update(item.id, {
+                content: item.text,
+                isCompleted: item.completed,
+              });
+            }
+          } else {
+            await itemService.create({
+              listId: editingCard.id,
+              content: item.text,
+              isCompleted: item.completed,
+            });
+          }
+        }
+
+        for (const old of oldTasks) {
+          const stillExists = items.find((t) => t.id === old.id);
+          if (!stillExists) {
+            await itemService.remove(old.id);
+          }
+        }
+      } else {
+        const newList = await listService.create({
+          title: cardName,
+          color: color,
+          icon: iconName,
+          viewType: activeFilter,
+        });
+
+        // Створюємо всі завдання для нього
+        for (const item of items) {
+          await itemService.create({
+            listId: newList.id,
+            content: item.text,
+            isCompleted: item.completed,
+          });
+        }
+      }
+
+      await fetchData();
       setIsModalOpen(false);
+      setEditingCard(null);
+    } catch (error) {
+      console.error("Помилка збереження", error);
     }
   };
 
-  const filteredCards = cards.filter((card) => {
-    return card.date === activeFilter;
-  });
+  if (!user) return null;
 
+  const filteredCards = cards.filter((card) => card.date === activeFilter);
   const HEADER_HEIGHT = 65;
 
   return (
     <div className="flex-1 flex flex-col h-full w-full pt-4 relative">
-      {filteredCards.length === 0 ? (
+      {isLoading ? (
+        <div className="flex-1 flex items-center justify-center">
+          <span className="text-gray-400 animate-pulse">Завантаження...</span>
+        </div>
+      ) : filteredCards.length === 0 ? (
         <div className="flex-1 flex items-center justify-center liquid-glass rounded-[40px] mb-6 mx-4 shadow-inner transition-colors duration-500">
           <span className="text-3xl font-extrabold text-theme-accent opacity-70">
             {activeFilter === "Today" ? "No tasks for Today" : "No other tasks"}
@@ -179,7 +246,6 @@ export default function Home() {
         <div className="flex-1 relative mb-3 w-full overflow-hidden rounded-[40px]">
           {filteredCards.map((card, index) => {
             const isExpanded = expandedCardId === card.id;
-
             const expandedIndex = filteredCards.findIndex(
               (c) => c.id === expandedCardId,
             );

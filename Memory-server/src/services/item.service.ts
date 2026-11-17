@@ -44,14 +44,14 @@ export const update = async (
   const values: (string | boolean)[] = [];
   let paramIndex = 1;
 
-  if (data.content) {
+  if (data.content !== undefined) {
     setClauses.push(`content=$${paramIndex}`);
     values.push(data.content);
     paramIndex++;
   }
 
-  if (data.isCompleted) {
-    setClauses.push(`isCompleted=$${paramIndex}`);
+  if (data.isCompleted !== undefined) {
+    setClauses.push(`iscompleted=$${paramIndex}`);
     values.push(data.isCompleted);
     paramIndex++;
   }
@@ -74,6 +74,5 @@ export const update = async (
 };
 
 export const remove = async (id: string, userId: string) => {
-  (await pool.query("DELETE FROM items WHERE id=$1 AND userid=$2"),
-    [id, userId]);
+  await pool.query("DELETE FROM items WHERE id=$1 AND userid=$2", [id, userId]);
 };

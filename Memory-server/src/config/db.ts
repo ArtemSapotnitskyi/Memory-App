@@ -7,16 +7,16 @@ dotenv.config();
 //Debag check-in
 console.log(
   "DB URL starts with:",
-  process.env.DATABASE_URL_DEV
-    ? process.env.DATABASE_URL_DEV.substring(0, 15)
+  process.env.DATABASE_URL_PROD
+    ? process.env.DATABASE_URL_PROD.substring(0, 15)
     : "UNDEFINED!!!",
 );
 
 export const pool = new Pool({
-  connectionString: process.env.DATABASE_URL_DEV,
+  connectionString: process.env.DATABASE_URL_PROD,
 
   //SSL CERTIFICATES
-  // ssl: { rejectUnauthorized: false },
+  ssl: { rejectUnauthorized: false },
 });
 
 pool.query("SELECT NOW()", (err, res) => {

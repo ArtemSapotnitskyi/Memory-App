@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
-import { X, User, Moon, Sun, Palette } from "lucide-react";
+import { X, User, Moon, Sun, Palette, LogOut } from "lucide-react";
+import { useAuthStore } from "@/shared/store/auth.store";
 
 interface SettingsModalProps {
   onClose: () => void;
@@ -25,6 +26,14 @@ export default function SettingsModal({
   currentTheme,
   setTheme,
 }: SettingsModalProps) {
+  const user = useAuthStore((state) => state.user);
+  const logout = useAuthStore((state) => state.logout);
+
+  const handleLogout = async () => {
+    await logout();
+    onClose();
+  };
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md px-4"
@@ -52,10 +61,10 @@ export default function SettingsModal({
           </div>
           <div className="flex-1 min-w-0">
             <h4 className="font-bold text-[19px] text-black dark:text-white truncate">
-              User Name
+              {user?.username || "Guest"}
             </h4>
             <p className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
-              user@example.com
+              {user?.email || "No email"}
             </p>
           </div>
         </div>
@@ -111,6 +120,16 @@ export default function SettingsModal({
             ))}
           </div>
         </div>
+
+        <hr className="border-black/5 dark:border-white/10 mt-2" />
+
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center justify-center gap-2 py-3.5 rounded-full bg-red-100 dark:bg-red-500/10 text-red-600 dark:text-red-400 font-bold hover:bg-red-200 dark:hover:bg-red-500/20 transition-colors active:scale-95"
+        >
+          <LogOut size={18} strokeWidth={2.5} />
+          Log Out
+        </button>
       </div>
     </div>
   );
